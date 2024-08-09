@@ -47,7 +47,7 @@
     <h1 class="title">Text Shuffler</h1>
     <textarea id="input" placeholder="Enter your text here.." class="textarea"></textarea>
     <button onclick="convertText()" class="button">Convert</button>
-    <textarea id="output" readonly placeholder="Result will be displayed here" class="textarea"></textarea>
+    <textarea id="output" onclick="copyToClipboard()" readonly placeholder="Result will be displayed here" class="textarea"></textarea>
 
     <script>
       const input = document.getElementById("input")
@@ -66,6 +66,13 @@
 
       function convertText() {
         output.value = shuffleText(input.value)
+      }
+
+      function copyToClipboard() {
+        navigator.clipboard.writeText(output.value)
+          .then(() => {
+            alert("Text copied to clipboard!")
+        })
       }
     </script>
   </body>
