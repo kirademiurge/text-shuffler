@@ -64,7 +64,7 @@
       }
 
       function shuffleText(text) {
-        return text.split(" ").map(shuffleWord).join(" ")
+        return text.split(/(\s+)/).map(part => /\S/.test(part) ? shuffleWord(part) : part).join("")
       }
 
       function convertText() {
