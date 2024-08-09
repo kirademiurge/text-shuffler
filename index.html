@@ -54,10 +54,13 @@
       const output = document.getElementById("output")
 
       function shuffleWord(word) {
-        if (word.length <= 3) return word
-        const middle = word.slice(1, -1)
+        if (/\d/.test(word) || word.length <= 3) return word
+        const leadingPunctuation = word.match(/^[^\p{L}]+/u) || ""
+        const trailingPunctuation = word.match(/[^\p{L}]+$/u) || ""
+        const cleanWord = word.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "")
+        const middle = cleanWord.slice(1, -1)
         const shuffledMiddle = middle.split("").sort(() => Math.random() - 0.5).join("")
-        return word[0] + shuffledMiddle + word[word.length - 1]
+        return leadingPunctuation + cleanWord[0] + shuffledMiddle + cleanWord[cleanWord.length - 1] + trailingPunctuation
       }
 
       function shuffleText(text) {
