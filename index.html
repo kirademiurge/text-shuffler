@@ -12,15 +12,16 @@
       }
       .page {
         font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
         margin: 20px;
-        background-color: #f2f2f7;
-        color: #1c1c1e;
+        overflow: hidden;
       }
       .title {
         text-align: center;
         font-weight: 600;
         font-size: 24px;
-        color: #000;
+        color: #ffffff;
         margin-bottom: 20px;
       }
       .interactive-elements {
@@ -30,21 +31,62 @@
       }
       .textarea {
         width: 100%;
-        height: auto;
-        min-height: 100px;
+        min-height: 200px;
         padding: 15px;
-        box-sizing: border-box;
-        border: 1px solid #c7c7cc;
+        border: 1px solid #3a3a3c;
         border-radius: 12px;
         font-size: 17px;
         line-height: 1.6;
         resize: none;
-        background-color: #ffffff;
-        color: #000000;
-        box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+        background-color: #1c1c1e;
+        color: #e0e0e0;
+        box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
       .textarea::placeholder {
         color: #8e8e93;
+      }
+      .notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #333;
+        color: #ffffff;
+        padding: 12px 20px;
+        border-radius: 10px;
+        box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        z-index: 1000;
+      }
+      .notification.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -15px;
+        margin-left: -15px;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        display: none;
+      }
+      .loader.show {
+        display: block;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
       @media (min-width: 768px) {
         .interactive-elements {
@@ -61,9 +103,14 @@
       <textarea id="output" onclick="copyToClipboard()" readonly placeholder="Result will be displayed here" class="textarea"></textarea>
     </div>
 
+    <div id="loader" class="loader"></div>
+    <div id="notification" class="notification"></div>
+
     <script>
       const input = document.getElementById("input")
       const output = document.getElementById("output")
+      const notification = document.getElementById("notification")
+      const loader = document.getElementById("loader")
 
       function shuffleWord(word) {
         if (/\d/.test(word) || word.length <= 3) return word
@@ -74,24 +121,44 @@
         const shuffledMiddle = middle.split("").sort(() => Math.random() - 0.5).join("")
         return leadingPunctuation + cleanWord[0] + shuffledMiddle + cleanWord[cleanWord.length - 1] + trailingPunctuation
       }
-
       function shuffleText(text) {
         return text.split(/(\s+)/).map(part => /\S/.test(part) ? shuffleWord(part) : part).join("")
       }
 
-      let typingTimer
+      function debounce(func, wait) {
+        let timeout
+        return function(...args) {
+          clearTimeout(timeout)
+          timeout = setTimeout(() => func(...args), wait)
+        }
+      }
+
+      function setLoaderVisibility(isVisible) {
+        if (isVisible) loader.classList.add("show")
+        else loader.classList.remove("show")
+      }
+
+      const debouncedShuffleText = debounce(() => {
+        output.value = shuffleText(input.value)
+        setLoaderVisibility(false)
+      }, 1000)
       input.addEventListener("input", () => {
-        clearTimeout(typingTimer)
-        typingTimer = setTimeout(() => {
-          output.value = shuffleText(input.value)
-        }, 500)
+        setLoaderVisibility(true)
+        debouncedShuffleText()
       })
 
-      function copyToClipboard() {
-        navigator.clipboard.writeText(output.value)
-          .then(() => {
-            alert("Text copied to clipboard!")
-        })
+      function showNotification(message) {
+        notification.textContent = message
+        notification.classList.add("show")
+        setTimeout(() => {notification.classList.remove("show")}, 2000)
+      }
+
+      async function copyToClipboard() {
+        if (output.value.trim() === "") return
+        try {
+          await navigator.clipboard.writeText(output.value)
+          showNotification("Text copied to clipboard!")
+        } catch(error) {}
       }
     </script>
   </body>
